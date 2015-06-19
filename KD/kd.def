@@ -1,0 +1,8 @@
+EXPORTS
+
+    DebugExtensionInitialize
+    DebugExtensionUninitialize
+
+    help
+    idt
+    st
