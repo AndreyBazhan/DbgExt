@@ -9,7 +9,7 @@ Copyright (c) Andrey Bazhan
 
 PDEBUG_CONTROL DebugControl;
 PDEBUG_SYMBOLS DebugSymbols;
-PDEBUG_DATA_SPACES DebugDataSpaces;
+PDEBUG_DATA_SPACES4 DebugDataSpaces;
 PDEBUG_REGISTERS DebugRegisters;
 
 

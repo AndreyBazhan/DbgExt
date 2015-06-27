@@ -41,13 +41,17 @@ Environment:
     ULONG64 KeServiceDescriptorTable;
     ULONG64 KiServiceLimit;
     ULONG64 ServiceTableBase;
-    ULONG Limit;
     ULONG64 Address;
     ULONG64 ServiceAddress;
+    ULONG64 PsNtosImageBase;
+    ULONG64 NtosImageBase;
+    ULONG64 NtosImageEnd;
+    ULONG Limit;
     ULONG i;
     LONG Offset;
     ULONG BytesRead;
     CHAR ServiceName[MAX_PATH];
+    IMAGE_NT_HEADERS64 ImageNtHeaders;
 
     UNREFERENCED_PARAMETER(args);
 
@@ -72,13 +76,13 @@ Environment:
 
         if ((Status = DebugSymbols->GetOffsetByName("nt!KeServiceDescriptorTable", &KeServiceDescriptorTable)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt!KeServiceDescriptorTable.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!KeServiceDescriptorTable.\n");
             __leave;
         }
 
         if ((Status = DebugSymbols->GetOffsetByName("nt!KiServiceLimit", &KiServiceLimit)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt!KiServiceLimit.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!KiServiceLimit.\n");
             __leave;
         }
 
@@ -93,6 +97,26 @@ Environment:
             DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read service table limit.\n");
             __leave;
         }
+
+        if ((Status = DebugSymbols->GetOffsetByName("nt!PsNtosImageBase", &PsNtosImageBase)) != S_OK) {
+
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!PsNtosImageBase.\n");
+            __leave;
+        }
+
+        if (DebugDataSpaces->ReadPointersVirtual(1, PsNtosImageBase, &NtosImageBase) != S_OK) {
+
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt!PsNtosImageBase.\n");
+            __leave;
+        }
+
+        if (DebugDataSpaces->ReadImageNtHeaders(NtosImageBase, &ImageNtHeaders) != S_OK) {
+
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt image headers.\n");
+            __leave;
+        }
+
+        NtosImageEnd = NtosImageBase + ImageNtHeaders.OptionalHeader.SizeOfImage;
 
         Address = ServiceTableBase;
 
@@ -112,7 +136,12 @@ Environment:
 
                 DebugSymbols->GetNameByOffset(ServiceAddress, (PSTR)ServiceName, _countof(ServiceName), &BytesRead, NULL);
 
-                DebugControl->Output(DEBUG_OUTPUT_NORMAL, "%03lx:\t%p\t%s\n", i, ServiceAddress, ServiceName);
+                DebugControl->ControlledOutput(DEBUG_OUTCTL_DML,
+                                               DEBUG_OUTPUT_NORMAL,
+                                               (ServiceAddress >= NtosImageBase && ServiceAddress < NtosImageEnd) ? "%03lx:\t%p\t%s\n" : "%03lx:<col fg=\"changed\">\t%p\t%s</col>\n",
+                                               i,
+                                               ServiceAddress,
+                                               ServiceName);
             }
         }
         else if (IMAGE_FILE_MACHINE_AMD64 == ProcessorType) {
@@ -140,7 +169,12 @@ Environment:
 
                 DebugSymbols->GetNameByOffset(ServiceAddress, (PSTR)ServiceName, _countof(ServiceName), &BytesRead, NULL);
 
-                DebugControl->Output(DEBUG_OUTPUT_NORMAL, "%03lx:\t%p\t%s\n", i, ServiceAddress, ServiceName);
+                DebugControl->ControlledOutput(DEBUG_OUTCTL_DML,
+                                               DEBUG_OUTPUT_NORMAL,
+                                               (ServiceAddress >= NtosImageBase && ServiceAddress < NtosImageEnd) ? "%03lx:\t%p\t%s\n" : "%03lx:<col fg=\"changed\">\t%p\t%s</col>\n",
+                                               i,
+                                               ServiceAddress,
+                                               ServiceName);
             }
         }
 

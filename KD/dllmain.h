@@ -5,7 +5,7 @@
 
 extern PDEBUG_CONTROL DebugControl;
 extern PDEBUG_SYMBOLS DebugSymbols;
-extern PDEBUG_DATA_SPACES DebugDataSpaces;
+extern PDEBUG_DATA_SPACES4 DebugDataSpaces;
 extern PDEBUG_REGISTERS DebugRegisters;
 
 
