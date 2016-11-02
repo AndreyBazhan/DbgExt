@@ -5,8 +5,64 @@ Copyright (c) Andrey Bazhan
 --*/
 
 #include "stdafx.h"
-#include "dllmain.h"
+#include "common.h"
 
+
+static PDEBUG_CONTROL4 DebugControl;
+static PDEBUG_SYMBOLS3 DebugSymbols;
+static PDEBUG_DATA_SPACES4 DebugDataSpaces;
+
+
+static
+HRESULT
+QueryInterfaces(
+    _In_ PDEBUG_CLIENT DebugClient
+    )
+{
+    HRESULT Status = S_OK;
+
+    if ((Status = DebugClient->QueryInterface(__uuidof(IDebugControl), (PVOID *)&DebugControl)) != S_OK) {
+
+        return Status;
+    }
+
+    if ((Status = DebugClient->QueryInterface(__uuidof(IDebugSymbols), (PVOID *)&DebugSymbols)) != S_OK) {
+
+        return Status;
+    }
+
+    if ((Status = DebugClient->QueryInterface(__uuidof(IDebugDataSpaces), (PVOID *)&DebugDataSpaces)) != S_OK) {
+
+        return Status;
+    }
+
+    return Status;
+}
+
+static
+VOID
+ReleaseInterfaces(
+    VOID
+    )
+{
+    if (DebugDataSpaces) {
+
+        DebugDataSpaces->Release();
+        DebugDataSpaces = NULL;
+    }
+
+    if (DebugSymbols) {
+
+        DebugSymbols->Release();
+        DebugSymbols = NULL;
+    }
+
+    if (DebugControl) {
+
+        DebugControl->Release();
+        DebugControl = NULL;
+    }
+}
 
 HRESULT
 CALLBACK
@@ -59,60 +115,66 @@ Environment:
 
         if ((Status = QueryInterfaces(DebugClient)) != S_OK) {
 
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not query interfaces.\n");
+            __leave;
+        }
+
+        if ((Status = IsKernelMode(DebugClient, __FUNCTION__)) != S_OK) {
+
             __leave;
         }
 
         if ((Status = DebugControl->GetActualProcessorType(&ProcessorType)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't get the processor type.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not get processor type.\n");
             __leave;
         }
 
         if ((Status = DebugControl->GetSystemVersion(&PlatformId, &Major, &Minor, NULL, NULL, NULL, &ServicePackNumber, NULL, NULL, NULL)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't get system version.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not get system version.\n");
             __leave;
         }
 
         if ((Status = DebugSymbols->GetOffsetByName("nt!KeServiceDescriptorTable", &KeServiceDescriptorTable)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!KeServiceDescriptorTable.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not get address of nt!KeServiceDescriptorTable.\n");
             __leave;
         }
 
         if ((Status = DebugSymbols->GetOffsetByName("nt!KiServiceLimit", &KiServiceLimit)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!KiServiceLimit.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not get address of nt!KiServiceLimit.\n");
             __leave;
         }
 
         if ((Status = DebugDataSpaces->ReadPointersVirtual(1, KeServiceDescriptorTable, &ServiceTableBase)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read service table base.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read service table base.\n");
             __leave;
         }
 
         if ((Status = DebugDataSpaces->ReadVirtual(KiServiceLimit, &Limit, sizeof(ULONG), &BytesRead)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read service table limit.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read service table limit.\n");
             __leave;
         }
 
         if ((Status = DebugSymbols->GetOffsetByName("nt!PsNtosImageBase", &PsNtosImageBase)) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read offset of the nt!PsNtosImageBase.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not get address of nt!PsNtosImageBase.\n");
             __leave;
         }
 
         if (DebugDataSpaces->ReadPointersVirtual(1, PsNtosImageBase, &NtosImageBase) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt!PsNtosImageBase.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read nt!PsNtosImageBase.\n");
             __leave;
         }
 
         if (DebugDataSpaces->ReadImageNtHeaders(NtosImageBase, &ImageNtHeaders) != S_OK) {
 
-            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read nt image headers.\n");
+            DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read kernel image headers.\n");
             __leave;
         }
 
@@ -130,7 +192,7 @@ Environment:
 
                 if ((Status = DebugDataSpaces->ReadPointersVirtual(1, Address, &ServiceAddress)) != S_OK) {
 
-                    DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read memory.\n");
+                    DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read memory.\n");
                     __leave;
                 }
 
@@ -152,7 +214,7 @@ Environment:
 
                 if ((Status = DebugDataSpaces->ReadVirtual(Address, &Offset, sizeof(Offset), &BytesRead)) != S_OK) {
 
-                    DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Couldn't read memory.\n");
+                    DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read memory.\n");
                     __leave;
                 }
 

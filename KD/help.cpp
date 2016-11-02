@@ -5,8 +5,7 @@ Copyright (c) Andrey Bazhan
 --*/
 
 #include "stdafx.h"
-
-#define APPNAME     _T("KD")
+#include "common.h"
 
 
 HRESULT
