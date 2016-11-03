@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define APPNAME     _T("KD")
+#define APPNAME     _T("DbgExt")
 
 
 HRESULT

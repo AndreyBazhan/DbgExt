@@ -1,4 +1,4 @@
-# KD
+# DbgExt
 
 Debugger extension for the Debugging Tools for Windows (WinDbg, KD, CDB, NTSD).
 
@@ -18,7 +18,7 @@ Debugger extension for the Debugging Tools for Windows (WinDbg, KD, CDB, NTSD).
 C:\Program Files (x86)\Windows Kits\8.1\Debuggers\x64\windbg.exe or
 C:\Program Files (x86)\Windows Kits\8.1\Debuggers\x86\windbg.exe
 7. In the right pane, select Command Arguments and then set the command line arguments:
--c ".prefer_dml 1;.load kd" -z "D:\CrashDumps\livekd.dmp"
+-c ".prefer_dml 1;.load dbgext" -z "D:\CrashDumps\livekd.dmp"
 8. In the right pane, select Environment and then set the PATH environment variable: PATH=$(OutDir);%PATH%
 9. Choose the OK button.
 10. Press F5 or use Debug > Start Debugging to debug.
