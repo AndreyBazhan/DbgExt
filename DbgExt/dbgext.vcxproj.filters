@@ -49,12 +49,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="kd.def">
+    <None Include="dbgext.def">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="kd.rc">
+    <ResourceCompile Include="dbgext.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

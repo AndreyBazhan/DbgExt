@@ -166,13 +166,13 @@ Environment:
             __leave;
         }
 
-        if (DebugDataSpaces->ReadPointersVirtual(1, PsNtosImageBase, &NtosImageBase) != S_OK) {
+        if ((Status = DebugDataSpaces->ReadPointersVirtual(1, PsNtosImageBase, &NtosImageBase)) != S_OK) {
 
             DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read nt!PsNtosImageBase.\n");
             __leave;
         }
 
-        if (DebugDataSpaces->ReadImageNtHeaders(NtosImageBase, &ImageNtHeaders) != S_OK) {
+        if ((Status = DebugDataSpaces->ReadImageNtHeaders(NtosImageBase, &ImageNtHeaders)) != S_OK) {
 
             DebugControl->Output(DEBUG_OUTPUT_NORMAL, "Could not read kernel image headers.\n");
             __leave;
